@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Bingo Multiplayer</title>
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <style>
+    body {
+      font-family: Arial;
+      text-align: center;
+      background: #f0f0f0;
+    }
+    .card {
+      display: grid;
+      grid-template-columns: repeat(5, 60px);
+      gap: 5px;
+      justify-content: center;
+      margin: 20px auto;
+    }
+    .cell {
+      width: 60px;
+      height: 60px;
+      border: 1px solid black;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      background: white;
+    }
+    .marked {
+      background: lightgreen;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      margin: 10px;
+    }
+  </style>
+</head>
+
+<body>
+
+<h1>🎯 Bingo Multiplayer Game</h1>
+
+<input id="name" placeholder="Enter your name">
+<button onclick="joinGame()">Join Game</button>
+
+<h2>Your Bingo Card</h2>
+<div class="card" id="card"></div>
+
+<button onclick="drawNumber()">🎲 Draw Number</button>
+
+<h3>Numbers Drawn:</h3>
+<div id="numbers"></div>
+
+<script>
+  const socket = io("http://localhost:3000");
+  let card = [];
+  let drawn = [];
+
+  function joinGame() {
+    const name = document.getElementById("name").value;
+    socket.emit("joinGame", name);
+  }
+
+  socket.on("yourCard", (data) => {
+    card = data;
+    renderCard();
+  });
+
+  socket.on("numberDrawn", (num) => {
+    drawn.push(num);
+    renderCard();
+    document.getElementById("numbers").innerText = drawn.join(", ");
+  });
+
+  function renderCard() {
+    const cardDiv = document.getElementById("card");
+    cardDiv.innerHTML = "";
+    card.forEach(n => {
+      const div = document.createElement("div");
+      div.className = "cell" + (drawn.includes(n) ? " marked" : "");
+      div.innerText = n;
+      cardDiv.appendChild(div);
+    });
+  }
+
+  function drawNumber() {
+    socket.emit("drawNumber");
+  }
+</script>
+
+</body>
+</html>
